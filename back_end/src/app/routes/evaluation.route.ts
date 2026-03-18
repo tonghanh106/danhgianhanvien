@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getEvaluations, createEvaluation } from "../controllers/evaluation.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -30,7 +30,7 @@ const router = Router();
  *       200:
  *         description: Thành công
  */
-router.get("/", authenticate, getEvaluations);
+router.get("/", authenticate, requirePermission('evaluations','view'), getEvaluations);
 
 /**
  * @swagger
@@ -64,6 +64,6 @@ router.get("/", authenticate, getEvaluations);
  *       200:
  *         description: Xử lý thành công
  */
-router.post("/", authenticate, createEvaluation);
+router.post("/", authenticate, requirePermission('evaluations','create'), createEvaluation);
 
 export default router;

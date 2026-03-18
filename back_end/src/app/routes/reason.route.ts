@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getReasons, createReason, updateReason, deleteReason } from "../controllers/reason.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Thành công
  */
-router.get("/", authenticate, getReasons);
+router.get("/", authenticate, requirePermission('reasons','view'), getReasons);
 
 /**
  * @swagger
@@ -50,7 +50,7 @@ router.get("/", authenticate, getReasons);
  *       200:
  *         description: Thành công
  */
-router.post("/", authenticate, createReason);
+router.post("/", authenticate, requirePermission('reasons','create'), createReason);
 
 /**
  * @swagger
@@ -83,7 +83,7 @@ router.post("/", authenticate, createReason);
  *       200:
  *         description: Thành công
  */
-router.put("/:id", authenticate, updateReason);
+router.put("/:id", authenticate, requirePermission('reasons','edit'), updateReason);
 
 /**
  * @swagger
@@ -103,6 +103,6 @@ router.put("/:id", authenticate, updateReason);
  *       200:
  *         description: Thành công
  */
-router.delete("/:id", authenticate, deleteReason);
+router.delete("/:id", authenticate, requirePermission('reasons','delete'), deleteReason);
 
 export default router;

@@ -1,8 +1,7 @@
 # Build stage
-FROM node:18-alpine as build-stage
+FROM node:20-bookworm-slim as build-stage
 WORKDIR /app
 COPY package*.json ./
-# Dùng npm install vì file package-lock.json đôi lúc bị xung đột nếu không chuẩn (hoặc vite template chưa có)
 RUN npm install
 COPY . .
 RUN npm run build

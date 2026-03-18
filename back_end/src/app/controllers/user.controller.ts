@@ -5,7 +5,7 @@ export const getUsers = async (req: any, res: any) => {
   const user = req.user;
   try {
     let sql = `
-      SELECT u.id, u.username, u.full_name, u.role, u.department_id, u.branch_id, 
+      SELECT u.id, u.username, u.full_name, u.role, u.role_id, u.department_id, u.branch_id, 
              d.name as department_name, b.name as branch_name
       FROM users u
       LEFT JOIN departments d ON u.department_id = d.id
@@ -44,9 +44,9 @@ export const getUsers = async (req: any, res: any) => {
 };
 
 export const createUser = async (req: any, res: any) => {
-  const { username, password, full_name, role, department_id, branch_id } = req.body;
+  const { username, password, full_name, role, role_id, department_id, branch_id } = req.body;
   const currentUser = req.user;
-  
+
   const lowerUsername = (username || '').toLowerCase();
   const usernameRegex = /^[a-z0-9@.]{5,24}$/;
   if (!usernameRegex.test(lowerUsername)) return res.status(400).json({ error: "Tên tài khoản phải từ 5-24 ký tự, chỉ chứa chữ cái thường, số, @ và dấu chấm." });
@@ -62,18 +62,25 @@ export const createUser = async (req: any, res: any) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const finalBranchId = branch_id || (currentUser.role === 'ADMIN' ? currentUser.branch_id : null);
   const finalDepartmentId = department_id || null;
+  // Dùng role_id từ frontend gửi lên, fallback lookup theo tên nếu không có
+  let finalRoleId = role_id ? parseInt(role_id) : null;
 
   try {
+    if (!finalRoleId && role) {
+      const { rows: roleRows } = await pgPool.query(`SELECT id FROM roles WHERE name = $1`, [role]);
+      finalRoleId = roleRows[0]?.id || null;
+    }
+
     const { rows } = await pgPool.query(
-      `INSERT INTO users (username, password, full_name, role, department_id, branch_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (username, password, full_name, role, role_id, department_id, branch_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [lowerUsername, hashedPassword, full_name, role, finalDepartmentId, finalBranchId]
+      [lowerUsername, hashedPassword, full_name, role, finalRoleId, finalDepartmentId, finalBranchId]
     );
     res.json({ id: rows[0].id });
   } catch (e: any) {
     console.error("createUser error:", e);
-    if (e.code === '23505') { // Postgres Unique Violation
+    if (e.code === '23505') {
       return res.status(400).json({ error: "Tên đăng nhập đã tồn tại" });
     }
     res.status(400).json({ error: "Lỗi hệ thống khi tạo tài khoản" });
@@ -81,55 +88,51 @@ export const createUser = async (req: any, res: any) => {
 };
 
 export const updateUser = async (req: any, res: any) => {
-  const { username, password, full_name, role, department_id, branch_id } = req.body;
+  const { username, password, full_name, role, role_id, department_id, branch_id } = req.body;
   const { id } = req.params;
   const lowerUsername = (username || '').toLowerCase();
-  
+
   try {
-    const checkQuery = await pgPool.query(`SELECT role, department_id, branch_id FROM users WHERE id = $1`, [id]);
+    const checkQuery = await pgPool.query(`SELECT role, role_id, department_id, branch_id FROM users WHERE id = $1`, [id]);
     const oldUser = checkQuery.rows[0];
     if (!oldUser) return res.status(404).json({ error: "Không tìm thấy user" });
 
-    let finalSessionId = undefined; // Undefined means we don't update it unless changed
-    
-    // Nếu đổi quyền (Role/Branch/Dept) thì bắt buộc user phải bị out ra để đăng nhập lại lấy jwt mới
+    // Nếu đổi quyền (Role/Branch/Dept) thì xóa session buộc user đăng nhập lại
     const changedPermissions = oldUser.role !== role || oldUser.department_id != department_id || oldUser.branch_id != branch_id;
-    if (changedPermissions) {
-      finalSessionId = 'FORCE_LOGOUT_PERMISSIONS';
-    }
 
     const finalBranchId = branch_id || null;
     const finalDepartmentId = department_id || null;
+
+    // Dùng role_id từ frontend, fallback lookup theo tên nếu không có
+    let finalRoleId = role_id ? parseInt(role_id) : null;
+    if (!finalRoleId && role) {
+      const { rows: roleRows } = await pgPool.query(`SELECT id FROM roles WHERE name = $1`, [role]);
+      finalRoleId = roleRows[0]?.id || null;
+    }
 
     if (password) {
       const hashedPassword = bcrypt.hashSync(password, 10);
       const updateSql = `
         UPDATE users 
-        SET username = $1, password = $2, full_name = $3, role = $4, department_id = $5, branch_id = $6
-            ${changedPermissions ? ', session_id = $8' : ''}
-        WHERE id = $7
+        SET username = $1, password = $2, full_name = $3, role = $4, role_id = $5, department_id = $6, branch_id = $7
+            ${changedPermissions ? ', session_id = NULL' : ''}
+        WHERE id = $8
       `;
-      const params = [lowerUsername, hashedPassword, full_name, role, finalDepartmentId, finalBranchId, id];
-      if (changedPermissions) params.push(finalSessionId);
-      
-      await pgPool.query(updateSql, params);
+      await pgPool.query(updateSql, [lowerUsername, hashedPassword, full_name, role, finalRoleId, finalDepartmentId, finalBranchId, id]);
     } else {
       const updateSql = `
         UPDATE users 
-        SET username = $1, full_name = $2, role = $3, department_id = $4, branch_id = $5
-            ${changedPermissions ? ', session_id = $7' : ''}
-        WHERE id = $6
+        SET username = $1, full_name = $2, role = $3, role_id = $4, department_id = $5, branch_id = $6
+            ${changedPermissions ? ', session_id = NULL' : ''}
+        WHERE id = $7
       `;
-      const params = [lowerUsername, full_name, role, finalDepartmentId, finalBranchId, id];
-      if (changedPermissions) params.push(finalSessionId);
-      
-      await pgPool.query(updateSql, params);
+      await pgPool.query(updateSql, [lowerUsername, full_name, role, finalRoleId, finalDepartmentId, finalBranchId, id]);
     }
 
     res.json({ success: true });
   } catch (e: any) {
     console.error("updateUser error:", e);
-    if (e.code === '23505') return res.status(400).json({ error: "Tên đăng nhập trùng lặp" });
+    if (e.code === '23505') return res.status(400).json({ error: "Tên đăng nhập trùng lập" });
     res.status(400).json({ error: "Lỗi khi cập nhật người dùng" });
   }
 };
@@ -138,7 +141,7 @@ export const deleteUser = async (req: any, res: any) => {
   try {
     await pgPool.query(`DELETE FROM users WHERE id = $1`, [req.params.id]);
     res.json({ success: true });
-  } catch (e) { 
-    res.status(400).json({ error: "Lỗi khi xóa người dùng (Có thể user này đang bị ràng buộc khóa ngoại)" }); 
+  } catch (e) {
+    res.status(400).json({ error: "Lỗi khi xóa người dùng (Có thể user này đang bị ràng buộc khóa ngoại)" });
   }
 };

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getBranches, createBranch, updateBranch, deleteBranch } from "../controllers/branch.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Thành công
  */
-router.get("/", authenticate, getBranches);
+router.get("/", authenticate, requirePermission('branches','view'), getBranches);
 
 /**
  * @swagger
@@ -46,7 +46,7 @@ router.get("/", authenticate, getBranches);
  *       200:
  *         description: Thành công
  */
-router.post("/", authenticate, createBranch);
+router.post("/", authenticate, requirePermission('branches','create'), createBranch);
 
 /**
  * @swagger
@@ -75,7 +75,7 @@ router.post("/", authenticate, createBranch);
  *       200:
  *         description: Thành công
  */
-router.put("/:id", authenticate, updateBranch);
+router.put("/:id", authenticate, requirePermission('branches','edit'), updateBranch);
 
 /**
  * @swagger
@@ -95,6 +95,6 @@ router.put("/:id", authenticate, updateBranch);
  *       200:
  *         description: Thành công
  */
-router.delete("/:id", authenticate, deleteBranch);
+router.delete("/:id", authenticate, requirePermission('branches','delete'), deleteBranch);
 
 export default router;

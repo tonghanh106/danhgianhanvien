@@ -4,7 +4,7 @@ import { apiFetch } from '../services/api';
 import Logo from '../components/layout/Logo';
 
 interface LoginProps {
-  onLogin: (user: any, token: string) => void;
+  onLogin: (user: any) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -19,15 +19,14 @@ export default function Login({ onLogin }: LoginProps) {
     setError('');
     setLoading(true);
     try {
-      // Clear any old session data before trying to login
-      sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
 
       const data = await apiFetch('/api/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
-      onLogin(data.user, data.token);
+      // Cookie session_id được browser tự lưu (httpOnly)
+      onLogin(data.user);
     } catch (err: any) {
       setError(err.message);
     } finally {

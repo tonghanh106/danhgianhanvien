@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getUsers, createUser, updateUser, deleteUser } from "../controllers/user.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Trả về danh sách user
  */
-router.get("/", authenticate, getUsers);
+router.get("/", authenticate, requirePermission('users','view'), getUsers);
 
 /**
  * @swagger
@@ -62,7 +62,7 @@ router.get("/", authenticate, getUsers);
  *       200:
  *         description: Trả về ID user vừa tạo
  */
-router.post("/", authenticate, createUser);
+router.post("/", authenticate, requirePermission('users','create'), createUser);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.post("/", authenticate, createUser);
  *       200:
  *         description: Cập nhật thành công
  */
-router.put("/:id", authenticate, updateUser);
+router.put("/:id", authenticate, requirePermission('users','edit'), updateUser);
 
 /**
  * @swagger
@@ -124,6 +124,6 @@ router.put("/:id", authenticate, updateUser);
  *       200:
  *         description: Xóa thành công
  */
-router.delete("/:id", authenticate, deleteUser);
+router.delete("/:id", authenticate, requirePermission('users','delete'), deleteUser);
 
 export default router;

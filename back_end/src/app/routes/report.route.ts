@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getSummary, getSummaryDepartments, getDepartmentDetails, getEmployeeDetails, getDashboardOverview } from "../controllers/report.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -34,7 +34,7 @@ const router = Router();
  *       200:
  *         description: Thành công
  */
-router.get("/summary", authenticate, getSummary);
+router.get("/summary", authenticate, requirePermission('reports','view'), getSummary);
 
 /**
  * @swagger
@@ -48,7 +48,7 @@ router.get("/summary", authenticate, getSummary);
  *       200:
  *         description: Thành công
  */
-router.get("/summary/departments", authenticate, getSummaryDepartments);
+router.get("/summary/departments", authenticate, requirePermission('reports','view'), getSummaryDepartments);
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ router.get("/summary/departments", authenticate, getSummaryDepartments);
  *       200:
  *         description: Thành công
  */
-router.get("/reports/department/:id", authenticate, getDepartmentDetails);
+router.get("/reports/department/:id", authenticate, requirePermission('reports','view'), getDepartmentDetails);
 
 /**
  * @swagger
@@ -88,7 +88,7 @@ router.get("/reports/department/:id", authenticate, getDepartmentDetails);
  *       200:
  *         description: Thành công
  */
-router.get("/reports/employee/:id", authenticate, getEmployeeDetails);
+router.get("/reports/employee/:id", authenticate, requirePermission('reports','view'), getEmployeeDetails);
 
 /**
  * @swagger
@@ -102,6 +102,6 @@ router.get("/reports/employee/:id", authenticate, getEmployeeDetails);
  *       200:
  *         description: Trả về Total Branches, Departments, Users, v.v
  */
-router.get("/dashboard/overview", authenticate, getDashboardOverview);
+router.get("/dashboard/overview", authenticate, requirePermission('reports','view'), getDashboardOverview);
 
 export default router;

@@ -7,10 +7,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Hatova&@*#251103}
       POSTGRES_DB: ${POSTGRES_DB:-danhgianhanvien}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./back_end/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -28,7 +28,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=${POSTGRES_USER:-postgres}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-Hatova&@*#251103}
       - DB_NAME=${POSTGRES_DB:-danhgianhanvien}
       - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey}
     ports:
@@ -48,6 +48,20 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: danhgianhanvien_pgadmin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    ports:
+      - "8082:80"
+    depends_on:
+      - db
     networks:
       - app-network
 

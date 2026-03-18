@@ -32,14 +32,12 @@ export default function App() {
     }
     setUser(null);
     sessionStorage.removeItem('user');
-    sessionStorage.removeItem('token');
-    window.location.hash = ''; // Clear hash on logout
+    window.location.hash = '';
   };
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem('user');
-    const token = sessionStorage.getItem('token');
-    if (savedUser && token) {
+    if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
@@ -91,11 +89,10 @@ export default function App() {
     };
   }, [user]);
 
-  const handleLogin = (userData: User, token: string) => {
+  const handleLogin = (userData: User, _token?: string) => {
     setUser(userData);
     sessionStorage.setItem('user', JSON.stringify(userData));
-    sessionStorage.setItem('token', token);
-    window.location.hash = 'evaluation'; // Update hash on login
+    window.location.hash = 'evaluation';
     setActiveTab('evaluation');
   };
 

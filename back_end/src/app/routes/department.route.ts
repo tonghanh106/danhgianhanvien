@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from "../controllers/department.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+import { authenticate, requirePermission } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -23,7 +23,7 @@ const router = Router();
  *       200:
  *         description: Thành công
  */
-router.get("/", authenticate, getDepartments);
+router.get("/", authenticate, requirePermission('departments','view'), getDepartments);
 
 /**
  * @swagger
@@ -48,7 +48,7 @@ router.get("/", authenticate, getDepartments);
  *       200:
  *         description: Thành công
  */
-router.post("/", authenticate, createDepartment);
+router.post("/", authenticate, requirePermission('departments','create'), createDepartment);
 
 /**
  * @swagger
@@ -79,7 +79,7 @@ router.post("/", authenticate, createDepartment);
  *       200:
  *         description: Thành công
  */
-router.put("/:id", authenticate, updateDepartment);
+router.put("/:id", authenticate, requirePermission('departments','edit'), updateDepartment);
 
 /**
  * @swagger
@@ -99,6 +99,6 @@ router.put("/:id", authenticate, updateDepartment);
  *       200:
  *         description: Thành công
  */
-router.delete("/:id", authenticate, deleteDepartment);
+router.delete("/:id", authenticate, requirePermission('departments','delete'), deleteDepartment);
 
 export default router;
