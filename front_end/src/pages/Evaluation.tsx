@@ -364,41 +364,75 @@ export default function EvaluationPage({ user }: { user: User }) {
                   <div 
                     key={ev.employee_id} 
                     onClick={() => handleEditIntent(ev.employee_id)}
-                    className="cursor-pointer snap-center scroll-mt-24 sm:scroll-mt-32 w-full bg-white rounded-2xl border border-slate-200 p-2 md:p-4 shadow-sm hover:shadow-md transition-all">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
-                      <div className="flex items-center gap-3 sm:w-64 shrink-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
-                          {ev.full_name?.charAt(0)}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-900 text-sm sm:text-base truncate leading-tight">{ev.full_name}</h4>
-                          <p className="text-[10px] sm:text-xs text-slate-500 font-mono truncate">{ev.employee_code}</p>
-                        </div>
+                    className="cursor-pointer snap-center scroll-mt-24 sm:scroll-mt-32 w-full bg-white rounded-2xl border border-slate-200 px-3 py-2.5 md:px-4 md:py-3 shadow-sm hover:shadow-md transition-all">
+                    {/* Main row: avatar + name + stars */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base shrink-0">
+                        {ev.full_name?.charAt(0)}
                       </div>
-
-                      <div className="flex flex-1 items-center justify-center">
-                        <div className="flex items-center justify-center gap-1 sm:gap-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              disabled={!isDateAllowed(selectedDate)}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStarClick(ev.employee_id, star);
-                              }}
-                              className={cn(
-                                "p-1 sm:p-1.5 rounded-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed",
-                                (ev.stars || 0) >= star ? "text-amber-400" : "text-slate-200"
-                              )}
-                            >
-                              <Star size={24} className="sm:w-10 sm:h-10" fill={(ev.stars || 0) >= star ? "currentColor" : "none"} />
-                            </button>
-                          ))}
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-slate-900 text-sm truncate leading-tight">{ev.full_name}</h4>
+                        <p className="text-[10px] text-slate-400 font-mono">{ev.employee_code}</p>
                       </div>
-
-                      <div className="hidden lg:block lg:w-32"></div>
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            disabled={!isDateAllowed(selectedDate)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStarClick(ev.employee_id, star);
+                            }}
+                            className={cn(
+                              "p-0.5 sm:p-1 rounded-md transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                              (ev.stars || 0) >= star ? "text-amber-400" : "text-slate-200"
+                            )}
+                          >
+                            <Star size={20} className="sm:w-7 sm:h-7" fill={(ev.stars || 0) >= star ? "currentColor" : "none"} />
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Reason chips + note row — shown only if data exists */}
+                    {((ev.reason_ids && ev.reason_ids.length > 0) || ev.note) && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1 pl-12 sm:pl-14">
+                        {/* Mobile: max 1 chip */}
+                        {(ev.reason_ids || []).slice(0, 1).map((rid: number) => {
+                          const r = reasons.find((x: any) => x.id === rid);
+                          return r ? (
+                            <span key={`m-${rid}`} className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 max-w-[150px] truncate">
+                              {r.reason_text}
+                            </span>
+                          ) : null;
+                        })}
+                        {/* Desktop: max 2 chips */}
+                        {(ev.reason_ids || []).slice(0, 2).map((rid: number) => {
+                          const r = reasons.find((x: any) => x.id === rid);
+                          return r ? (
+                            <span key={`d-${rid}`} className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 max-w-[190px] truncate">
+                              {r.reason_text}
+                            </span>
+                          ) : null;
+                        })}
+                        {/* Overflow badge */}
+                        {(ev.reason_ids || []).length > 1 && (
+                          <span className="sm:hidden inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                            +{(ev.reason_ids || []).length - 1}
+                          </span>
+                        )}
+                        {(ev.reason_ids || []).length > 2 && (
+                          <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                            +{(ev.reason_ids || []).length - 2}
+                          </span>
+                        )}
+                        {/* Note */}
+                        {ev.note && (
+                          <span className="text-[10px] text-slate-400 italic truncate max-w-[110px] sm:max-w-[200px]">"{ev.note}"</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
 
