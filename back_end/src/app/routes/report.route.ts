@@ -102,6 +102,6 @@ router.get("/reports/employee/:id", authenticate, requirePermission('employees',
  *       200:
  *         description: Trả về Total Branches, Departments, Users, v.v
  */
-router.get("/dashboard/overview", authenticate, requirePermission('reports','view'), getDashboardOverview);
+router.get("/dashboard/overview", authenticate, getDashboardOverview);
 
 export default router;

@@ -43,7 +43,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Tổng quan', path: 'dashboard', permission: 'evaluations:view' },
+    { icon: LayoutDashboard, label: 'Tổng quan', path: 'dashboard', permission: '' },
     { icon: Star, label: 'Đánh giá', path: 'evaluation', permission: 'evaluations:view' },
     { icon: BarChart3, label: 'Báo cáo', path: 'reports', permission: 'reports:view' },
     { icon: Users, label: 'Nhân viên', path: 'employees', permission: 'employees:view' },
@@ -62,7 +62,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
   }, []);
 
   const filteredMenu = menuItems.filter(item =>
-    user.role === 'SUPER_ADMIN' || user.permissions?.includes(item.permission)
+    item.permission === '' || user.role === 'SUPER_ADMIN' || user.permissions?.includes(item.permission)
   );
 
   const [activeTab, setActiveTab] = useState(() => {
