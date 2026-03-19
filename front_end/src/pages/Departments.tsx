@@ -76,13 +76,15 @@ export default function Departments({ user }: { user: any }) {
           <h2 className="text-2xl font-bold text-slate-900">Quản lý Phòng ban</h2>
           <p className="text-slate-500">Danh sách các phòng ban trong công ty</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="btn-primary"
-        >
-          <Plus size={18} />
-          <span>Thêm phòng ban</span>
-        </button>
+        {(user.role === 'SUPER_ADMIN' || user.permissions?.includes('departments:create')) && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="btn-primary"
+          >
+            <Plus size={18} />
+            <span>Thêm phòng ban</span>
+          </button>
+        )}
 
       </div>
 
