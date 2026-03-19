@@ -81,12 +81,12 @@ export const createUser = async (req: any, res: any) => {
 };
 
 export const updateUser = async (req: any, res: any) => {
-  const { username, password, full_name, role, role_id, department_id, branch_id } = req.body;
+  const { username, password, full_name, role, department_id, branch_id } = req.body;
   const { id } = req.params;
   const lowerUsername = (username || '').toLowerCase();
 
   try {
-    const checkQuery = await pgPool.query(`SELECT role, role_id, department_id, branch_id FROM users WHERE id = $1`, [id]);
+    const checkQuery = await pgPool.query(`SELECT role, department_id, branch_id FROM users WHERE id = $1`, [id]);
     const oldUser = checkQuery.rows[0];
     if (!oldUser) return res.status(404).json({ error: "Không tìm thấy user" });
 
