@@ -44,8 +44,18 @@ export const authenticate = async (req: any, res: any, next: any) => {
     }
 
     // Permissions dựa trên role text (SUPER_ADMIN bypass toàn bộ)
-    const permissions: string[] = [];
-
+    let permissions: string[] = [];
+    if (userData.role && userData.role !== 'SUPER_ADMIN') {
+      const { rows: permRows } = await pgPool.query(
+        `SELECT p.module, p.action 
+         FROM role_permissions rp
+         JOIN permissions p ON rp.permission_id = p.id
+         JOIN roles r ON rp.role_id = r.id
+         WHERE r.name = $1`,
+        [userData.role]
+      );
+      permissions = permRows.map((r: any) => `${r.module}:${r.action}`);
+    }
     // Cập nhật thời gian hoạt động cuối
     await pgPool.query(
       'UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1',

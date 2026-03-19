@@ -36,13 +36,14 @@ export const login = async (req: any, res: any) => {
 
     // Load permissions từ role_permissions
     let permissions: string[] = [];
-    if (userData.role_id) {
+    if (userData.role && userData.role !== 'SUPER_ADMIN') {
       const { rows: permRows } = await pgPool.query(
         `SELECT p.module, p.action 
          FROM role_permissions rp
          JOIN permissions p ON rp.permission_id = p.id
-         WHERE rp.role_id = $1`,
-        [userData.role_id]
+         JOIN roles r ON rp.role_id = r.id
+         WHERE r.name = $1`,
+        [userData.role]
       );
       permissions = permRows.map((r: any) => `${r.module}:${r.action}`);
     }
@@ -68,7 +69,6 @@ export const login = async (req: any, res: any) => {
       full_name: userData.full_name,
       department_id: userData.department_id,
       branch_id: userData.branch_id,
-      role_id: userData.role_id,
       permissions,
     };
 
