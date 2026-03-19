@@ -78,3 +78,54 @@ INSERT INTO public.users (username, password, full_name, role) VALUES
   ('staff',   '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Nhân viên mẫu', 'USER')
 ON CONFLICT (username) DO NOTHING;
 
+-- 7. Phân quyền (Roles & Permissions)
+CREATE TABLE IF NOT EXISTS public.roles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.permissions (
+  id SERIAL PRIMARY KEY,
+  module VARCHAR(50) NOT NULL,
+  action VARCHAR(50) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  UNIQUE(module, action)
+);
+
+CREATE TABLE IF NOT EXISTS public.role_permissions (
+  role_id INTEGER REFERENCES public.roles(id) ON DELETE CASCADE,
+  permission_id INTEGER REFERENCES public.permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY(role_id, permission_id)
+);
+
+-- Seed Roles
+INSERT INTO public.roles (name, description) VALUES
+('SUPER_ADMIN', 'Quản trị viên cấp cao nhất'),
+('ADMIN', 'Quản trị viên chi nhánh'),
+('USER', 'Nhân viên thông thường')
+ON CONFLICT (name) DO NOTHING;
+
+-- Seed Permissions for 'employees', 'branches', 'departments', 'reasons', 'users', 'evaluations', 'reports'
+DO $$
+DECLARE
+   mod TEXT;
+   act TEXT;
+   perm_name TEXT;
+BEGIN
+   FOR mod IN SELECT * FROM unnest(ARRAY['employees', 'branches', 'departments', 'reasons', 'users', 'evaluations', 'reports']) LOOP
+      FOR act IN SELECT * FROM unnest(ARRAY['view', 'create', 'edit', 'delete']) LOOP
+          -- mapping action to name manually roughly
+          perm_name := CASE act 
+             WHEN 'view' THEN 'Xem danh sách ' || mod
+             WHEN 'create' THEN 'Thêm ' || mod
+             WHEN 'edit' THEN 'Sửa ' || mod
+             WHEN 'delete' THEN 'Xoá ' || mod
+          END;
+          INSERT INTO permissions (module, action, name) VALUES (mod, act, perm_name) ON CONFLICT DO NOTHING;
+      END LOOP;
+   END LOOP;
+END
+$$;
+
+

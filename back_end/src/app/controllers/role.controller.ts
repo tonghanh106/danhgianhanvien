@@ -53,9 +53,7 @@ export const updateRolePermissions = async (req: any, res: any) => {
       const query = `INSERT INTO role_permissions (role_id, permission_id) VALUES ${placeholders}`;
       await client.query(query, values);
     }
-    
-    await client.query(`UPDATE users SET current_token = 'FORCE_LOGOUT_PERMISSIONS' WHERE role_id = $1`, [roleId]);
-    
+    await client.query(`UPDATE users SET session_id = NULL WHERE role = (SELECT name FROM roles WHERE id = $1)`, [roleId]);
     await client.query('COMMIT');
     res.json({ success: true });
   } catch (err) { 
