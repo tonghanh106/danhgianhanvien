@@ -9,7 +9,11 @@ export default function UsersPage({ user }: { user: any }) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [roles, setRoles] = useState<any[]>([]);
+  const [roles] = useState<any[]>([
+    { id: 'SUPER_ADMIN', name: 'SUPER_ADMIN', label: 'Admin' },
+    { id: 'ADMIN',       name: 'ADMIN',       label: 'Quản trị' },
+    { id: 'USER',        name: 'USER',        label: 'User' },
+  ]);
   const [searchText, setSearchText] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedBranchFilter, setSelectedBranchFilter] = useState(user.role !== 'SUPER_ADMIN' ? (user.branch_id?.toString() || 'all') : 'all');
@@ -26,16 +30,14 @@ export default function UsersPage({ user }: { user: any }) {
 
   const fetchData = async () => {
     try {
-      const [userData, deptData, branchData, rolesData] = await Promise.all([
+      const [userData, deptData, branchData] = await Promise.all([
         apiFetch('/api/users'),
         apiFetch('/api/departments'),
         apiFetch('/api/branches'),
-        apiFetch('/api/roles')
       ]);
       setUsers(userData);
       setDepartments(deptData);
       setBranches(branchData);
-      setRoles(rolesData || []);
     } catch (err) {
       console.error(err);
     }
@@ -64,7 +66,7 @@ export default function UsersPage({ user }: { user: any }) {
         password: '',
         full_name: '',
         role: 'USER',
-        role_id: roles.find(r => r.name === 'USER')?.id?.toString() || '',
+        role_id: '',
         department_id: '',
         branch_id: ''
       });
@@ -289,25 +291,25 @@ export default function UsersPage({ user }: { user: any }) {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Vai trò <span className="text-red-500">*</span></label>
                 <select
-                  value={formData.role_id}
+                  value={formData.role}
                   onChange={e => {
-                    const selectedRole = roles.find(r => r.id.toString() === e.target.value);
+                    const newRole = e.target.value;
                     setFormData({
                       ...formData,
-                      role_id: e.target.value,
-                      role: selectedRole?.name || 'USER',
-                      department_id: selectedRole?.name === 'SUPER_ADMIN' ? '' : formData.department_id,
-                      branch_id: selectedRole?.name === 'SUPER_ADMIN' ? '' : formData.branch_id
+                      role: newRole,
+                      role_id: newRole,
+                      department_id: newRole === 'SUPER_ADMIN' ? '' : formData.department_id,
+                      branch_id: newRole === 'SUPER_ADMIN' ? '' : formData.branch_id
                     });
                   }}
                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none"
                   required
                 >
                   <option value="">-- Chọn vai trò --</option>
-                  {roles.map(r => <option key={r.id} value={r.id}>{r.name === 'SUPER_ADMIN' ? 'Admin' : r.name === 'ADMIN' ? 'Quản trị' : 'User'}</option>)}
+                  {roles.map(r => <option key={r.id} value={r.name}>{r.label}</option>)}
                 </select>
               </div>
-              {String(formData.role_id) !== '1' && formData.role_id !== '' && (
+              {formData.role !== 'SUPER_ADMIN' && formData.role !== '' && (
                 <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-center gap-2 mb-1">
                     <MapPin size={16} className="text-indigo-600" />

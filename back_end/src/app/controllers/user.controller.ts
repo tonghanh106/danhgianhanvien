@@ -5,7 +5,7 @@ export const getUsers = async (req: any, res: any) => {
   const user = req.user;
   try {
     let sql = `
-      SELECT u.id, u.username, u.full_name, u.role, u.role_id, u.department_id, u.branch_id, 
+      SELECT u.id, u.username, u.full_name, u.role, u.department_id, u.branch_id, 
              d.name as department_name, b.name as branch_name
       FROM users u
       LEFT JOIN departments d ON u.department_id = d.id
@@ -62,20 +62,13 @@ export const createUser = async (req: any, res: any) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   const finalBranchId = branch_id || (currentUser.role === 'ADMIN' ? currentUser.branch_id : null);
   const finalDepartmentId = department_id || null;
-  // Dùng role_id từ frontend gửi lên, fallback lookup theo tên nếu không có
-  let finalRoleId = role_id ? parseInt(role_id) : null;
 
   try {
-    if (!finalRoleId && role) {
-      const { rows: roleRows } = await pgPool.query(`SELECT id FROM roles WHERE name = $1`, [role]);
-      finalRoleId = roleRows[0]?.id || null;
-    }
-
     const { rows } = await pgPool.query(
-      `INSERT INTO users (username, password, full_name, role, role_id, department_id, branch_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (username, password, full_name, role, department_id, branch_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [lowerUsername, hashedPassword, full_name, role, finalRoleId, finalDepartmentId, finalBranchId]
+      [lowerUsername, hashedPassword, full_name, role, finalDepartmentId, finalBranchId]
     );
     res.json({ id: rows[0].id });
   } catch (e: any) {
@@ -103,30 +96,23 @@ export const updateUser = async (req: any, res: any) => {
     const finalBranchId = branch_id || null;
     const finalDepartmentId = department_id || null;
 
-    // Dùng role_id từ frontend, fallback lookup theo tên nếu không có
-    let finalRoleId = role_id ? parseInt(role_id) : null;
-    if (!finalRoleId && role) {
-      const { rows: roleRows } = await pgPool.query(`SELECT id FROM roles WHERE name = $1`, [role]);
-      finalRoleId = roleRows[0]?.id || null;
-    }
-
     if (password) {
       const hashedPassword = bcrypt.hashSync(password, 10);
       const updateSql = `
         UPDATE users 
-        SET username = $1, password = $2, full_name = $3, role = $4, role_id = $5, department_id = $6, branch_id = $7
-            ${changedPermissions ? ', session_id = NULL' : ''}
-        WHERE id = $8
-      `;
-      await pgPool.query(updateSql, [lowerUsername, hashedPassword, full_name, role, finalRoleId, finalDepartmentId, finalBranchId, id]);
-    } else {
-      const updateSql = `
-        UPDATE users 
-        SET username = $1, full_name = $2, role = $3, role_id = $4, department_id = $5, branch_id = $6
+        SET username = $1, password = $2, full_name = $3, role = $4, department_id = $5, branch_id = $6
             ${changedPermissions ? ', session_id = NULL' : ''}
         WHERE id = $7
       `;
-      await pgPool.query(updateSql, [lowerUsername, full_name, role, finalRoleId, finalDepartmentId, finalBranchId, id]);
+      await pgPool.query(updateSql, [lowerUsername, hashedPassword, full_name, role, finalDepartmentId, finalBranchId, id]);
+    } else {
+      const updateSql = `
+        UPDATE users 
+        SET username = $1, full_name = $2, role = $3, department_id = $4, branch_id = $5
+            ${changedPermissions ? ', session_id = NULL' : ''}
+        WHERE id = $6
+      `;
+      await pgPool.query(updateSql, [lowerUsername, full_name, role, finalDepartmentId, finalBranchId, id]);
     }
 
     res.json({ success: true });
