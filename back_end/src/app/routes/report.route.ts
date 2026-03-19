@@ -88,7 +88,7 @@ router.get("/reports/department/:id", authenticate, requirePermission('reports',
  *       200:
  *         description: Thành công
  */
-router.get("/reports/employee/:id", authenticate, requirePermission('reports','view'), getEmployeeDetails);
+router.get("/reports/employee/:id", authenticate, requirePermission('employees','view'), getEmployeeDetails);
 
 /**
  * @swagger
