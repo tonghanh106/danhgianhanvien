@@ -82,8 +82,9 @@ export default function Reasons({ user }: { user: any }) {
   };
 
   const canManage = (reason: StarReason | null) => {
-    if (!reason) return true; // For new reasons
-    return user.role === 'SUPER_ADMIN' || reason.created_by === user.id;
+    if (user.role === 'SUPER_ADMIN') return true;
+    if (!reason) return user.permissions?.includes('reasons:create'); // Thêm mới
+    return user.permissions?.includes('reasons:edit') || reason.created_by === user.id; // Sửa
   };
 
   const filteredReasons = reasons.filter(r => {
@@ -101,7 +102,7 @@ export default function Reasons({ user }: { user: any }) {
           <h2 className="text-2xl font-bold text-slate-900">Quản lý Lý do Sao</h2>
           <p className="text-slate-500">Thiết lập các lý do tương ứng với số sao đánh giá</p>
         </div>
-        {(user.role === 'SUPER_ADMIN' || user.permissions?.includes('reasons:edit')) && (
+        {(user.role === 'SUPER_ADMIN' || user.permissions?.includes('reasons:create')) && (
           <button
             onClick={() => handleOpenModal()}
             className="btn-primary"
