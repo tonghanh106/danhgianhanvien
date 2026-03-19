@@ -150,7 +150,7 @@ export default function UsersPage({ user }: { user: any }) {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Tìm theo tên hoặc username..."
+            placeholder="Tìm theo tên hoặc tên đăng nhập..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
@@ -167,7 +167,7 @@ export default function UsersPage({ user }: { user: any }) {
             <option value="all">Tất cả vai trò</option>
             <option value="SUPER_ADMIN">Admin</option>
             <option value="ADMIN">Quản trị</option>
-            <option value="USER">User</option>
+            <option value="USER">Nhân viên</option>
           </select>
           <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={14} />
         </div>

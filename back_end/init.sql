@@ -35,9 +35,12 @@ CREATE TABLE IF NOT EXISTS public.employees (
   id SERIAL PRIMARY KEY,
   employee_code VARCHAR(50) UNIQUE NOT NULL,
   full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  cccd VARCHAR(20),
   department_id INTEGER REFERENCES public.departments(id) ON DELETE SET NULL,
   branch_id INTEGER REFERENCES public.branches(id) ON DELETE SET NULL,
   is_active BOOLEAN DEFAULT TRUE,
+  is_resigned BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

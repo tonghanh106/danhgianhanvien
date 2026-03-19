@@ -429,7 +429,7 @@ export default function Employees({ user }: { user: any }) {
                       setFormData(prev => ({
                         ...prev,
                         branch_id: newBranchId,
-                        // Reset department if it doesn't belong to the new branch
+                        // Reset phòng ban nếu không thuộc chi nhánh mới
                         department_id: prev.department_id && departments.find(d => d.id.toString() === prev.department_id)?.branch_id?.toString() === newBranchId
                           ? prev.department_id
                           : ''
@@ -471,7 +471,7 @@ export default function Employees({ user }: { user: any }) {
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                    placeholder="example@gmail.com"
+                    placeholder="vd: nguyenvana@gmail.com"
                   />
                 </div>
                 <div>
