@@ -1,0 +1,10 @@
+# Production override - Dùng image từ Docker Hub thay vì build local
+# Cách sử dụng: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Biến DOCKERHUB_USERNAME cần được đặt trong file .env hoặc environment
+
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME}/danhgianhanvien-backend:latest
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/danhgianhanvien-frontend:latest
