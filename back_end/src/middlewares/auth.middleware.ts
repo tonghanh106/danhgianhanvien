@@ -19,7 +19,7 @@ export const authenticate = async (req: any, res: any, next: any) => {
   try {
     // Tra session ID trong DB, lấy thông tin user
     const { rows } = await pgPool.query(
-      `SELECT id, username, role, role_id, branch_id, department_id, full_name, session_id, last_active_at
+      `SELECT id, username, role, branch_id, department_id, full_name, session_id, last_active_at
        FROM users 
        WHERE session_id = $1 AND is_active = true`,
       [sid]
@@ -43,18 +43,8 @@ export const authenticate = async (req: any, res: any, next: any) => {
       }
     }
 
-    // Load permissions từ bảng role_permissions
-    let permissions: string[] = [];
-    if (userData.role_id) {
-      const { rows: permRows } = await pgPool.query(
-        `SELECT p.module, p.action 
-         FROM role_permissions rp
-         JOIN permissions p ON rp.permission_id = p.id
-         WHERE rp.role_id = $1`,
-        [userData.role_id]
-      );
-      permissions = permRows.map((r: any) => `${r.module}:${r.action}`);
-    }
+    // Permissions dựa trên role text (SUPER_ADMIN bypass toàn bộ)
+    const permissions: string[] = [];
 
     // Cập nhật thời gian hoạt động cuối
     await pgPool.query(
@@ -67,7 +57,6 @@ export const authenticate = async (req: any, res: any, next: any) => {
       id: userData.id,
       username: userData.username,
       role: userData.role,
-      role_id: userData.role_id,
       branch_id: userData.branch_id,
       department_id: userData.department_id,
       full_name: userData.full_name,

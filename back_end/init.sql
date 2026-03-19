@@ -70,8 +70,7 @@ INSERT INTO public.departments (id, name, branch_id) VALUES
   (2, 'Phòng Kế Toán', 1) 
 ON CONFLICT DO NOTHING;
 
--- Mật khẩu mặc định là: 123456 (Đã mã hóa bằng thư viện trong NodeJS nếu có, nhưng init.sql sẽ chỉ cung cấp chuỗi trống nếu chưa có)
--- Lưu ý: Thực tế Password phải BCRYPT, để demo ta sẽ cấp 1 chuỗi BCRYPT mặc định cho pass "123456"
+-- Mật khẩu mặc định là: Admin@123 (bcrypt hash)
 INSERT INTO public.users (username, password, full_name, role, branch_id, department_id) 
-VALUES ('admin', '$2a$10$tZ2R.dKkONq1/9y.1yG82OGpD2M.7k/0GfXJ/zInA/E1hWpWvR8fK', 'Super Admin', 'SUPER_ADMIN', 1, 1) 
+VALUES ('admin', '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Super Admin', 'SUPER_ADMIN', 1, 1) 
 ON CONFLICT (username) DO NOTHING;
