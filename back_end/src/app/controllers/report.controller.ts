@@ -27,6 +27,9 @@ const getEmployeeStarsSummaryQuery = (startDate: string, endDate: string, user: 
   if (p_dept_id) {
     sql += ` AND e.department_id = $${pIdx++}`;
     params.push(p_dept_id);
+  } else if (user.role && user.role.toUpperCase() === 'USER' && user.department_id) {
+    sql += ` AND e.department_id = $${pIdx++}`;
+    params.push(user.department_id);
   }
 
   sql += ` GROUP BY e.id, e.employee_code, e.full_name, e.department_id, e.branch_id, d.name, b.name`;
@@ -77,9 +80,9 @@ export const getSummaryDepartments = async (req: any, res: any) => {
       dSql += ` AND branch_id = $${dpIdx++}`;
       dParams.push(p_branch_id || user.branch_id);
     }
-    if (p_dept_id) { // Modified: Removed (user.role === 'USER' && user.department_id)
+    if (p_dept_id || (user.role === 'USER' && user.department_id)) {
       dSql += ` AND id = $${dpIdx++}`;
-      dParams.push(p_dept_id);
+      dParams.push(p_dept_id || user.department_id);
     }
     
     const { rows: allDepts } = await pgPool.query(dSql, dParams);
@@ -103,6 +106,7 @@ export const getDepartmentDetails = async (req: any, res: any) => {
     
     if (user.role !== 'SUPER_ADMIN') {
       if (user.branch_id && dept.branch_id != user.branch_id) return res.status(403).json({ error: "Không có quyền" });
+      if (user.role === 'USER' && user.department_id && dept.id != user.department_id) return res.status(403).json({ error: "Không có quyền" });
     }
     
     const { sql, params } = getEmployeeStarsSummaryQuery(startDate, endDate, user, null, parseInt(department_id));
@@ -136,6 +140,7 @@ export const getEmployeeDetails = async (req: any, res: any) => {
     
     if (user.role !== 'SUPER_ADMIN') {
       if (user.branch_id && empData.branch_id !== user.branch_id) return res.status(403).json({ error: "Không có quyền" });
+      if (user.role === 'USER' && user.department_id && empData.department_id !== user.department_id) return res.status(403).json({ error: "Không có quyền" });
     }
     
     const evalsSql = `

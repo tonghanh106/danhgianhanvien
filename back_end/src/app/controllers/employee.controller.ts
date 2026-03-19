@@ -22,6 +22,10 @@ export const getEmployees = async (req: any, res: any) => {
       sql += ` AND e.branch_id = $${pIdx++}`;
       params.push(user.branch_id);
     }
+    if (user.role && user.role.toUpperCase() === 'USER' && user.department_id) {
+      sql += ` AND e.department_id = $${pIdx++}`;
+      params.push(user.department_id);
+    }
 
     sql += ` ORDER BY e.id DESC`;
 

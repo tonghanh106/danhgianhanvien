@@ -13,9 +13,14 @@ export const getDepartments = async (req: any, res: any) => {
     let pIdx = 1;
 
     if (user.role !== 'SUPER_ADMIN') {
-      if (user.branch_id) {
+      if (user.role === 'ADMIN' && user.branch_id) {
         sql += ` AND d.branch_id = $${pIdx++}`;
         params.push(user.branch_id);
+      } else if (user.role === 'USER' && user.department_id) {
+        sql += ` AND d.id = $${pIdx++}`;
+        params.push(user.department_id);
+      } else if (!user.branch_id && !user.department_id) {
+        return res.json([]);
       }
     }
     
@@ -30,11 +35,13 @@ export const getDepartments = async (req: any, res: any) => {
 export const createDepartment = async (req: any, res: any) => {
   const { name, branch_id } = req.body;
   const user = req.user;
-  if (user.role !== 'SUPER_ADMIN') {
+  if (user.role === 'ADMIN') {
     if (branch_id && parseInt(branch_id) !== user.branch_id) return res.status(403).json({ error: "Không có quyền tạo bộ phận cho chi nhánh khác" });
+  } else if (user.role === 'USER') {
+    return res.status(403).json({ error: "Bạn không có quyền quản lý bộ phận" });
   }
 
-  const newBranchId = user.role !== 'SUPER_ADMIN' ? user.branch_id : (branch_id || null);
+  const newBranchId = user.role === 'ADMIN' ? user.branch_id : (branch_id || null);
 
   try {
     const { rows } = await pgPool.query(
@@ -56,9 +63,11 @@ export const updateDepartment = async (req: any, res: any) => {
     const existing = rows[0];
     if (!existing) return res.status(404).json({ error: "Bộ phận không tồn tại" });
 
-    if (user.role !== 'SUPER_ADMIN') {
+    if (user.role === 'ADMIN') {
       if (existing.branch_id !== user.branch_id) return res.status(403).json({ error: "Không có quyền sửa bộ phận này" });
       if (branch_id && parseInt(branch_id) !== user.branch_id) return res.status(403).json({ error: "Không thể chuyển bộ phận sang chi nhánh khác" });
+    } else if (user.role === 'USER') {
+      return res.status(403).json({ error: "Bạn không có quyền sửa bộ phận" });
     }
     
     await pgPool.query(
@@ -80,7 +89,8 @@ export const deleteDepartment = async (req: any, res: any) => {
     if (!existing) return res.status(404).json({ error: "Bộ phận không tồn tại" });
 
     if (user.role !== 'SUPER_ADMIN') {
-      if (user.branch_id && existing.branch_id !== user.branch_id) return res.status(403).json({ error: "Không có quyền xóa bộ phận này" });
+      if (user.role === 'ADMIN' && existing.branch_id !== user.branch_id) return res.status(403).json({ error: "Không có quyền xóa bộ phận này" });
+      if (user.role === 'USER') return res.status(403).json({ error: "Bạn không có quyền xóa bộ phận" });
     }
     
     await pgPool.query(`DELETE FROM departments WHERE id = $1`, [id]);
