@@ -63,14 +63,12 @@ CREATE TABLE IF NOT EXISTS public.evaluations (
 );
 
 -- DỮ LIỆU MẪU BAN ĐẦU (SEED DATA)
-INSERT INTO public.branches (id, name) VALUES (1, 'Trụ sở chính (Hà Nội)') ON CONFLICT DO NOTHING;
+-- Tất cả mật khẩu mặc định: Admin@123
 
-INSERT INTO public.departments (id, name, branch_id) VALUES 
-  (1, 'Phòng IT', 1),
-  (2, 'Phòng Kế Toán', 1) 
-ON CONFLICT DO NOTHING;
-
--- Mật khẩu mặc định là: Admin@123 (bcrypt hash)
-INSERT INTO public.users (username, password, full_name, role, branch_id, department_id) 
-VALUES ('admin', '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Super Admin', 'SUPER_ADMIN', 1, 1) 
+-- 3 tài khoản mẫu cho 3 vai trò
+INSERT INTO public.users (username, password, full_name, role) VALUES
+  ('admin',   '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Super Admin',   'SUPER_ADMIN'),
+  ('manager', '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Quản lý mẫu',  'ADMIN'),
+  ('staff',   '$2b$10$qwMrm1FlLQ9aLlb2GVF/buykJXz9vyAboGJ8jQJaiuq1dlGZlffzW', 'Nhân viên mẫu', 'USER')
 ON CONFLICT (username) DO NOTHING;
+

@@ -144,12 +144,8 @@ export const getEmployeeDetails = async (req: any, res: any) => {
     }
     
     const evalsSql = `
-      SELECT ev.*, u.full_name as evaluator_name,
-             (SELECT string_agg(r.reason_text, ', ') 
-              FROM unnest(ev.reason_ids) reason_id
-              JOIN reasons r ON r.id = reason_id) as reason_text
+      SELECT ev.*
       FROM evaluations ev
-      LEFT JOIN users u ON ev.evaluator_id = u.id
       WHERE ev.employee_id = $1 AND ev.date >= $2 AND ev.date <= $3
       ORDER BY ev.date DESC
     `;
@@ -198,7 +194,7 @@ export const getDashboardOverview = async (req: any, res: any) => {
       LEFT JOIN departments d ON e.department_id = d.id
       LEFT JOIN branches b ON e.branch_id = b.id
       LEFT JOIN evaluations ev ON e.id = ev.employee_id
-      WHERE e.is_resigned = false
+      WHERE e.is_active = true
     `;
     const empP: any[] = [currentYear, currentMonth];
     let empIdx = 3;
