@@ -199,11 +199,6 @@ export default function EvaluationPage({ user }: { user: User }) {
       ? currentReasons.filter(id => id !== reasonId)
       : [...currentReasons, reasonId];
 
-    if (tempEvaluation.stars === 3 && newReasons.length > 2) {
-      showToast('Chỉ được chọn tối đa 2 lý do cho đánh giá 3 sao', 'error');
-      return;
-    }
-
     setTempEvaluation({ ...tempEvaluation, reason_ids: newReasons });
   };
 
