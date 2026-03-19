@@ -43,6 +43,7 @@ export default function Employees({ user }: { user: any }) {
     created_at: new Date().toISOString().split('T')[0]
   });
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [evaluationHistory, setEvaluationHistory] = useState<any[]>([]);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -119,9 +120,16 @@ export default function Employees({ user }: { user: any }) {
     setIsModalOpen(true);
   };
 
-  const handleViewDetail = (emp: Employee) => {
+  const handleViewDetail = async (emp: Employee) => {
     setSelectedEmployee(emp);
+    setEvaluationHistory([]);
     setIsDetailModalOpen(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const joinDate = emp.created_at ? new Date(emp.created_at).toISOString().split('T')[0] : '2000-01-01';
+      const result = await apiFetch(`/api/reports/employee/${emp.id}?startDate=${joinDate}&endDate=${today}`);
+      setEvaluationHistory(result?.evaluations || []);
+    } catch {}
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -622,25 +630,48 @@ export default function Employees({ user }: { user: any }) {
                       <div className="flex items-start gap-3">
                         <div className="mt-1 p-1.5 bg-indigo-50 text-indigo-500 rounded-lg"><Plus size={12} /></div>
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Ngày gia nhập hệ thống</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Ngày gia nhập</p>
                           <p className="text-sm font-semibold text-slate-700">
                             {selectedEmployee.created_at ? new Date(selectedEmployee.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
                           </p>
-                          <p className="text-[11px] text-indigo-400 font-medium whitespace-nowrap overflow-hidden text-ellipsis">Bởi: {selectedEmployee.created_by_name || 'Hệ thống'}</p>
+                          <p className="text-[11px] text-indigo-400 font-medium">Bởi: {(selectedEmployee as any).created_by_name || 'Hệ thống'}</p>
                         </div>
                       </div>
-
                       <div className="flex items-start gap-3 pt-4 border-t border-slate-100">
                         <div className="mt-1 p-1.5 bg-amber-50 text-amber-500 rounded-lg"><Edit2 size={12} /></div>
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase">Cập nhật lần cuối</p>
                           <p className="text-sm font-semibold text-slate-700">
-                            {selectedEmployee.updated_at ? new Date(selectedEmployee.updated_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
+                            {(selectedEmployee as any).updated_at ? new Date((selectedEmployee as any).updated_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
                           </p>
-                          <p className="text-[11px] text-amber-500/70 font-medium whitespace-nowrap overflow-hidden text-ellipsis">Người sửa: {selectedEmployee.updated_by_name || '---'}</p>
+                          <p className="text-[11px] text-amber-500/70 font-medium">Người sửa: {(selectedEmployee as any).updated_by_name || '---'}</p>
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Evaluation History */}
+                  <div>
+                    <h4 className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
+                      <ShieldCheck size={14} className="text-emerald-500" /> Lịch sử đánh giá
+                    </h4>
+                    {evaluationHistory.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">Chưa có đánh giá nào.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                        {evaluationHistory.slice(0, 20).map((ev: any) => (
+                          <div key={ev.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                            <div>
+                              <p className="text-xs font-bold text-slate-700">{new Date(ev.date).toLocaleDateString('vi-VN')}</p>
+                              <p className="text-[10px] text-slate-400">{ev.note || 'Không có ghi chú'}</p>
+                            </div>
+                            <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${ ev.stars >= 4 ? 'bg-emerald-50 text-emerald-600' : ev.stars >= 2 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>
+                              {'★'.repeat(ev.stars)}{'☆'.repeat(5 - ev.stars)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

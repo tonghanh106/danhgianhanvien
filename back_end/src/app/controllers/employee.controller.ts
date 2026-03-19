@@ -5,11 +5,14 @@ export const getEmployees = async (req: any, res: any) => {
   try {
     let sql = `
       SELECT e.id, e.employee_code, e.full_name, e.email, e.cccd, e.is_resigned, e.is_active,
-             e.department_id, e.branch_id, 
-             d.name as department_name, b.name as branch_name
+             e.department_id, e.branch_id, e.created_at, e.created_by, e.updated_by, e.updated_at,
+             d.name as department_name, b.name as branch_name,
+             u1.full_name as created_by_name, u2.full_name as updated_by_name
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
       LEFT JOIN branches b ON e.branch_id = b.id
+      LEFT JOIN users u1 ON e.created_by = u1.id
+      LEFT JOIN users u2 ON e.updated_by = u2.id
       WHERE 1=1
     `;
     const params: any[] = [];
@@ -51,13 +54,14 @@ export const createEmployee = async (req: any, res: any) => {
     const finalBranchId = user.role === 'ADMIN' ? user.branch_id : (branch_id || (user.role === 'USER' ? user.branch_id : null));
 
     const { rows } = await pgPool.query(
-      `INSERT INTO employees (employee_code, full_name, email, department_id, branch_id, cccd, is_resigned, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO employees (employee_code, full_name, email, department_id, branch_id, cccd, is_resigned, created_at, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
       [
         employee_code, full_name, email || null, department_id || null, finalBranchId, cccd || null,
         is_resigned ? true : false,
-        created_at || new Date().toISOString().split('T')[0]
+        created_at || new Date().toISOString().split('T')[0],
+        user.id
       ]
     );
 
@@ -124,16 +128,16 @@ export const updateEmployee = async (req: any, res: any) => {
     if (createdTime) {
       await pgPool.query(
         `UPDATE employees 
-         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7), created_at = $8
-         WHERE id = $9`,
-        [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, createdTime, id]
+         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7), created_at = $8, updated_by = $9, updated_at = NOW()
+         WHERE id = $10`,
+        [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, createdTime, user.id, id]
       );
     } else {
       await pgPool.query(
         `UPDATE employees 
-         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7)
-         WHERE id = $8`,
-        [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, id]
+         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7), updated_by = $8, updated_at = NOW()
+         WHERE id = $9`,
+        [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, user.id, id]
       );
     }
 

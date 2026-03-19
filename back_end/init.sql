@@ -41,7 +41,10 @@ CREATE TABLE IF NOT EXISTS public.employees (
   branch_id INTEGER REFERENCES public.branches(id) ON DELETE SET NULL,
   is_active BOOLEAN DEFAULT TRUE,
   is_resigned BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER REFERENCES public.users(id) ON DELETE SET NULL,
+  updated_by INTEGER REFERENCES public.users(id) ON DELETE SET NULL,
+  updated_at TIMESTAMP WITH TIME ZONE
 );
 
 -- 5. Bảng Lý do đánh giá (Lý do mất hoặc được nhận sao)
