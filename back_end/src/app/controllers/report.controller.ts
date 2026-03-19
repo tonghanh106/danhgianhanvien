@@ -10,8 +10,8 @@ const getEmployeeStarsSummaryQuery = (startDate: string, endDate: string, user: 
     FROM employees e
     LEFT JOIN departments d ON e.department_id = d.id
     LEFT JOIN branches b ON e.branch_id = b.id
-    LEFT JOIN evaluations ev ON e.id = ev.employee_id AND ev.date >= $1 AND ev.date <= $2
-    WHERE e.is_resigned = false
+    LEFT JOIN evaluations ev ON e.id = ev.employee_id AND ev.date >= $1 AND ev.date <= $2 AND ev.date >= e.created_at::date
+    WHERE e.is_active = true
   `;
   const params: any[] = [startDate, endDate];
   let pIdx = 3;
@@ -193,7 +193,7 @@ export const getDashboardOverview = async (req: any, res: any) => {
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
       LEFT JOIN branches b ON e.branch_id = b.id
-      LEFT JOIN evaluations ev ON e.id = ev.employee_id
+      LEFT JOIN evaluations ev ON e.id = ev.employee_id AND ev.date >= e.created_at::date
       WHERE e.is_active = true
     `;
     const empP: any[] = [currentYear, currentMonth];

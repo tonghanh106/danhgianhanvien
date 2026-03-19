@@ -57,7 +57,7 @@ export const createEmployee = async (req: any, res: any) => {
       [
         employee_code, full_name, email || null, department_id || null, finalBranchId, cccd || null,
         is_resigned ? true : false,
-        created_at ? new Date(created_at).toISOString() : new Date().toISOString()
+        created_at || new Date().toISOString().split('T')[0]
       ]
     );
 
@@ -124,14 +124,14 @@ export const updateEmployee = async (req: any, res: any) => {
     if (createdTime) {
       await pgPool.query(
         `UPDATE employees 
-         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, created_at = $8
+         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7), created_at = $8
          WHERE id = $9`,
         [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, createdTime, id]
       );
     } else {
       await pgPool.query(
         `UPDATE employees 
-         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7
+         SET employee_code = $1, full_name = $2, email = $3, department_id = $4, branch_id = $5, cccd = $6, is_resigned = $7, is_active = NOT ($7)
          WHERE id = $8`,
         [employee_code, full_name, email, department_id, branch_id, cccd, is_resigned ? true : false, id]
       );
