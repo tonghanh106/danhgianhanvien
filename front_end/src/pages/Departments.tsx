@@ -14,12 +14,15 @@ export default function Departments({ user }: { user: any }) {
   const [filterBranchId, setFilterBranchId] = useState(user.role !== 'SUPER_ADMIN' ? (user.branch_id?.toString() || 'all') : 'all');
 
   const fetchData = async () => {
-    const [depts, branchData] = await Promise.all([
-      apiFetch('/api/departments'),
-      apiFetch('/api/branches')
-    ]);
-    setDepartments(depts);
-    setBranches(branchData);
+    try {
+      const depts = await apiFetch('/api/departments');
+      setDepartments(depts);
+    } catch (e) { console.error("Could not fetch departments", e); }
+    
+    try {
+      const branchData = await apiFetch('/api/branches');
+      setBranches(branchData);
+    } catch (e) { console.error("Could not fetch branches", e); }
   };
 
   useEffect(() => {
