@@ -537,181 +537,120 @@ export default function Employees({ user }: { user: any }) {
           </div>
         </div>
       )}
-      {isDetailModalOpen && selectedEmployee && (
+      {isDetailModalOpen && selectedEmployee && (() => {
+          const now = new Date();
+          const starsTotal = evaluationHistory.reduce((s: number, ev: any) => s + (ev.stars || 0), 0);
+          const starsYear  = evaluationHistory.filter((ev: any) => new Date(ev.date).getFullYear() === now.getFullYear()).reduce((s: number, ev: any) => s + (ev.stars || 0), 0);
+          const starsMonth = evaluationHistory.filter((ev: any) => { const d = new Date(ev.date); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); }).reduce((s: number, ev: any) => s + (ev.stars || 0), 0);
+          return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+
           <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
-            {/* Header with Background Gradient */}
-            <div className="h-32 bg-gradient-to-r from-indigo-600 to-indigo-400 relative">
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all backdrop-blur-sm z-10"
-              >
-                <X size={20} />
+            {/* Gradient Header */}
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 p-6 relative">
+              <button onClick={() => setIsDetailModalOpen(false)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all backdrop-blur-sm">
+                <X size={18} />
               </button>
-            </div>
-
-            {/* Profile Avatar Overlay */}
-            <div className="px-8 -mt-12 relative z-10 flex items-end gap-6">
-              <div className="w-24 h-24 bg-white p-1 rounded-3xl shadow-xl">
-                <div className="w-full h-full bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-3xl">
-                  {selectedEmployee.full_name?.split(' ').pop()?.charAt(0) || 'E'}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white font-black text-2xl border border-white/30 shadow-lg">
+                  {selectedEmployee.full_name?.split(' ').pop()?.charAt(0) || 'N'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-black text-white leading-tight truncate">{selectedEmployee.full_name}</h3>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-indigo-200 bg-white/15 px-2 py-0.5 rounded-lg font-mono">{selectedEmployee.employee_code}</span>
+                    <span className={cn('text-[10px] font-black uppercase px-2 py-0.5 rounded-lg', selectedEmployee.is_resigned ? 'bg-red-400/30 text-red-100 border border-red-300/30' : 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/30')}>
+                      {selectedEmployee.is_resigned ? 'Đã nghỉ việc' : 'Đang làm việc'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-indigo-200 mt-1">{selectedEmployee.department_name} · {selectedEmployee.branch_name}</p>
                 </div>
               </div>
-              <div className="mb-2">
-                <h3 className="text-2xl font-black text-slate-900">{selectedEmployee.full_name}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{selectedEmployee.employee_code}</span>
-                  <span className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border",
-                    selectedEmployee.is_resigned ? "bg-red-50 text-red-500 border-red-100" : "bg-emerald-50 text-emerald-500 border-emerald-100"
-                  )}>
-                    {selectedEmployee.is_resigned ? 'Nghỉ việc' : 'Đang làm việc'}
-                  </span>
-                </div>
+
+              {/* Star Stats Row */}
+              <div className="grid grid-cols-3 gap-3 mt-5">
+                {[['Tháng này', starsMonth, 'text-yellow-300'], ['Năm ' + now.getFullYear(), starsYear, 'text-orange-300'], ['Tổng cộng', starsTotal, 'text-pink-300']].map(([label, val, cls]) => (
+                  <div key={label as string} className="bg-white/10 backdrop-blur-sm rounded-2xl p-3 text-center border border-white/20">
+                    <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wide">{label as string}</p>
+                    <p className={`text-2xl font-black ${cls as string}`}>{val as number}</p>
+                    <p className="text-[10px] text-indigo-300">⭐ sao</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column: Core Info */}
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                      <User size={14} className="text-indigo-400" /> Thông tin cơ bản
-                    </h4>
-                    <div className="bg-slate-50/50 rounded-2xl p-4 space-y-3 border border-slate-100">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2"><CreditCard size={14} /> CCCD:</span>
-                        <span className="font-bold text-slate-700">{selectedEmployee.cccd}</span>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left: Core Info */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><User size={12} className="text-indigo-400" /> Thông tin nhân viên</p>
+                  <div className="space-y-2">
+                    {[
+                      ['🪪', 'CCCD', selectedEmployee.cccd || '---'],
+                      ['📧', 'Email', selectedEmployee.email || '---'],
+                      ['📅', 'Ngày gia nhập', selectedEmployee.created_at ? new Date(selectedEmployee.created_at).toLocaleDateString('vi-VN') : '---'],
+                      ['👤', 'Người thêm', (selectedEmployee as any).created_by_name || 'Hệ thống'],
+                      ['✏️', 'Người sửa', (selectedEmployee as any).updated_by_name || '---'],
+                      ['🕐', 'Sửa lần cuối', (selectedEmployee as any).updated_at ? new Date((selectedEmployee as any).updated_at).toLocaleDateString('vi-VN') : '---'],
+                    ].map(([icon, label, val]) => (
+                      <div key={label as string} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                        <span className="text-xs text-slate-400 flex items-center gap-1.5">{icon as string} {label as string}</span>
+                        <span className="text-xs font-semibold text-slate-700 max-w-[55%] text-right truncate">{val as string}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2"><span className="p-0.5 bg-indigo-50 text-indigo-500 rounded text-[10px] font-bold">@</span> Email:</span>
-                        <span className="font-bold text-indigo-600 italic">{selectedEmployee.email || '---'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2"><MapPin size={14} /> Chi nhánh:</span>
-                        <span className="font-bold text-slate-700">{selectedEmployee.branch_name}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 flex items-center gap-2"><Building2 size={14} /> Phòng ban:</span>
-                        <span className="font-bold text-slate-700">{selectedEmployee.department_name}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                      <ShieldCheck size={14} className="text-amber-500" /> Điểm đánh giá (Stars)
-                    </h4>
-                    <div className="bg-amber-50/30 rounded-2xl p-4 border border-amber-100 grid grid-cols-3 gap-2">
-                      <div className="text-center">
-                        <p className="text-[10px] text-amber-500 font-bold uppercase">Tháng</p>
-                        <p className="text-xl font-black text-amber-600">{selectedEmployee.stars_month || 0}</p>
-                      </div>
-                      <div className="text-center border-x border-amber-100">
-                        <p className="text-[10px] text-amber-500 font-bold uppercase">Năm 2026</p>
-                        <p className="text-xl font-black text-amber-600">{selectedEmployee.stars_year || 0}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[10px] text-amber-500 font-bold uppercase">Tổng</p>
-                        <p className="text-xl font-black text-amber-600">{selectedEmployee.stars_all_time || 0}</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Right Column: System Info */}
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                      <History size={14} className="text-slate-400" /> Nhật ký hệ thống
-                    </h4>
-                    <div className="bg-slate-50/50 rounded-2xl p-4 space-y-4 border border-slate-100">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 p-1.5 bg-indigo-50 text-indigo-500 rounded-lg"><Plus size={12} /></div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Ngày gia nhập</p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {selectedEmployee.created_at ? new Date(selectedEmployee.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
-                          </p>
-                          <p className="text-[11px] text-indigo-400 font-medium">Bởi: {(selectedEmployee as any).created_by_name || 'Hệ thống'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 pt-4 border-t border-slate-100">
-                        <div className="mt-1 p-1.5 bg-amber-50 text-amber-500 rounded-lg"><Edit2 size={12} /></div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">Cập nhật lần cuối</p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {(selectedEmployee as any).updated_at ? new Date((selectedEmployee as any).updated_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '---'}
-                          </p>
-                          <p className="text-[11px] text-amber-500/70 font-medium">Người sửa: {(selectedEmployee as any).updated_by_name || '---'}</p>
-                        </div>
-                      </div>
+                {/* Right: Evaluation History */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><History size={12} className="text-indigo-400" /> Lịch sử đánh giá ({evaluationHistory.length} lần)</p>
+                  {evaluationHistory.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-slate-300">
+                      <ShieldCheck size={36} className="mb-2 opacity-40" />
+                      <p className="text-xs">Chưa có đánh giá nào</p>
                     </div>
-                  </div>
-
-                  {/* Evaluation History */}
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                      <ShieldCheck size={14} className="text-emerald-500" /> Lịch sử đánh giá
-                    </h4>
-                    {evaluationHistory.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">Chưa có đánh giá nào.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                        {evaluationHistory.slice(0, 20).map((ev: any) => (
-                          <div key={ev.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-                            <div>
-                              <p className="text-xs font-bold text-slate-700">{new Date(ev.date).toLocaleDateString('vi-VN')}</p>
-                              <p className="text-[10px] text-slate-400">{ev.note || 'Không có ghi chú'}</p>
-                            </div>
-                            <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${ ev.stars >= 4 ? 'bg-emerald-50 text-emerald-600' : ev.stars >= 2 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>
+                  ) : (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                      {evaluationHistory.map((ev: any) => (
+                        <div key={ev.id} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-100 hover:bg-indigo-50/40 transition-colors">
+                          <div className="w-10 h-10 flex flex-col items-center justify-center bg-white rounded-lg border border-slate-200 shrink-0">
+                            <p className="text-[10px] font-bold text-slate-500 leading-none">{new Date(ev.date).toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit'})}</p>
+                            <p className="text-[9px] text-slate-400">{new Date(ev.date).getFullYear()}</p>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] text-slate-400 truncate">{ev.note || 'Không có ghi chú'}</p>
+                          </div>
+                          <div className="shrink-0">
+                            <span className={cn('text-xs font-black px-2 py-1 rounded-lg', ev.stars >= 4 ? 'bg-emerald-50 text-emerald-600' : ev.stars >= 2 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600')}>
                               {'★'.repeat(ev.stars)}{'☆'.repeat(5 - ev.stars)}
                             </span>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    handleDelete(selectedEmployee.id);
-                    setIsDetailModalOpen(false);
-                  }}
-                  className="btn-danger"
-                >
-                  <Trash2 size={18} />
-                  <span>Xóa</span>
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-between items-center">
+              <div className="flex gap-2">
+                <button onClick={() => { handleDelete(selectedEmployee.id); setIsDetailModalOpen(false); }} className="btn-danger">
+                  <Trash2 size={16} /><span>Xóa</span>
                 </button>
-                <button
-                  onClick={() => {
-                    handleOpenModal(selectedEmployee);
-                    setIsDetailModalOpen(false);
-                  }}
-                  className="btn-secondary"
-                >
-                  <Edit2 size={18} className="text-indigo-500" />
-                  <span>Cập nhật</span>
+                <button onClick={() => { handleOpenModal(selectedEmployee); setIsDetailModalOpen(false); }} className="btn-secondary">
+                  <Edit2 size={16} className="text-indigo-500" /><span>Sửa</span>
                 </button>
               </div>
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="btn-dark"
-              >
-                Đóng
-              </button>
-
+              <button onClick={() => setIsDetailModalOpen(false)} className="btn-dark">Đóng</button>
             </div>
           </div>
         </div>
-      )}
+          );
+        })()}
+
       {/* Toast Notification */}
       {toast && (
         <div className={cn(
